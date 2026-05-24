@@ -33,8 +33,8 @@ local function createKeySystem()
 
     local Main = Instance.new("Frame")
     Main.Name = "MainKeyFrame"
-    Main.Size = UDim2.new(0, 320, 0, 220)
-    Main.Position = UDim2.new(0.5, -160, 0.5, -110)
+    Main.Size = UDim2.new(0, 320, 0, 260)
+    Main.Position = UDim2.new(0.5, -160, 0.5, -130)
     Main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     Main.BorderSizePixel = 0
     Main.Parent = ScreenGui
@@ -129,6 +129,19 @@ local function createKeySystem()
     SubmitBtn.Parent = Main
 
     Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 10)
+
+    -- GET KEY BUTTON
+    local GetKeyBtn = Instance.new("TextButton")
+    GetKeyBtn.Size = UDim2.new(0.85, 0, 0, 32)
+    GetKeyBtn.Position = UDim2.new(0.075, 0, 0, 196)
+    GetKeyBtn.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+    GetKeyBtn.Text = "GET KEY"
+    GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    GetKeyBtn.TextSize = 13
+    GetKeyBtn.Font = Enum.Font.GothamBold
+    GetKeyBtn.Parent = Main
+
+    Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 8)
 
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Size = UDim2.new(0, 28, 0, 28)
@@ -230,13 +243,37 @@ local function createKeySystem()
         end
     end)
 
+    -- GET KEY BUTTON FUNCTION
+    GetKeyBtn.MouseButton1Click:Connect(function()
+        local keyLink = "https://link-target.net/1349990/Q4gjw97CaIpW"
+        
+        -- Try to copy to clipboard
+        pcall(function()
+            setclipboard(keyLink)
+        end)
+        
+        StatusMsg.Text = "Link copied to clipboard!"
+        StatusMsg.TextColor3 = Color3.fromRGB(255, 200, 50)
+        
+        -- Flash effect
+        local originalColor = GetKeyBtn.BackgroundColor3
+        GetKeyBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+        wait(0.3)
+        GetKeyBtn.BackgroundColor3 = originalColor
+        
+        -- Open link in browser (optional fallback)
+        -- pcall(function()
+        --     syn.request({Url = keyLink, Method = "GET"})
+        -- end)
+    end)
+
     CloseBtn.MouseButton1Click:Connect(function()
         player:Kick("Key System | Unauthorized closure.")
     end)
 
     Main.Size = UDim2.new(0, 0, 0, 0)
     Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-    TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 320, 0, 220), Position = UDim2.new(0.5, -160, 0.5, -110)}):Play()
+    TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 320, 0, 260), Position = UDim2.new(0.5, -160, 0.5, -130)}):Play()
 end
 
 -- ========== MAIN FASTHUB FARM SCRIPT ==========
