@@ -164,7 +164,7 @@ local function createKeySystem()
     end)
 
     -- Key Logic
-    local correctKey = "fast2"
+    local correctKey = "fast1"
     local attempts = 3
 
     local function shakeFrame()
