@@ -1,1 +1,657 @@
-1
+-- Rensselaer County FASTHUB Farm - Delta Mobile
+-- + KEY SYSTEM v3.0 (3 attempts, kick on fail, vehicle detection)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local TweenService = game:GetService("TweenService")
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ========== KEY SYSTEM GUI ==========
+local function createKeySystem()
+    for _, gui in ipairs(playerGui:GetChildren()) do
+        if gui.Name == "RensselaerKeySystem" or gui.Name == "RensselaerFarm" then
+            gui:Destroy()
+        end
+    end
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "RensselaerKeySystem"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = playerGui
+
+    local Blur = Instance.new("Frame")
+    Blur.Name = "BlurBg"
+    Blur.Size = UDim2.new(1, 0, 1, 0)
+    Blur.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Blur.BackgroundTransparency = 0.3
+    Blur.BorderSizePixel = 0
+    Blur.Parent = ScreenGui
+
+    local Main = Instance.new("Frame")
+    Main.Name = "MainKeyFrame"
+    Main.Size = UDim2.new(0, 320, 0, 220)
+    Main.Position = UDim2.new(0.5, -160, 0.5, -110)
+    Main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    Main.BorderSizePixel = 0
+    Main.Parent = ScreenGui
+
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 16)
+
+    local Glow = Instance.new("Frame")
+    Glow.Name = "Glow"
+    Glow.Size = UDim2.new(1, 4, 1, 4)
+    Glow.Position = UDim2.new(0, -2, 0, -2)
+    Glow.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+    Glow.BackgroundTransparency = 0.8
+    Glow.BorderSizePixel = 0
+    Glow.ZIndex = -1
+    Glow.Parent = Main
+
+    Instance.new("UICorner", Glow).CornerRadius = UDim.new(0, 18)
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.BackgroundTransparency = 1
+    Title.Text = "KEY SYSTEM"
+    Title.TextColor3 = Color3.fromRGB(0, 200, 255)
+    Title.TextSize = 18
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = Main
+
+    local Subtitle = Instance.new("TextLabel")
+    Subtitle.Size = UDim2.new(1, 0, 0, 20)
+    Subtitle.Position = UDim2.new(0, 0, 0, 32)
+    Subtitle.BackgroundTransparency = 1
+    Subtitle.Text = "Enter your access key"
+    Subtitle.TextColor3 = Color3.fromRGB(150, 150, 150)
+    Subtitle.TextSize = 12
+    Subtitle.Font = Enum.Font.Gotham
+    Subtitle.Parent = Main
+
+    local AttemptsLabel = Instance.new("TextLabel")
+    AttemptsLabel.Name = "AttemptsLabel"
+    AttemptsLabel.Size = UDim2.new(1, 0, 0, 18)
+    AttemptsLabel.Position = UDim2.new(0, 0, 0, 55)
+    AttemptsLabel.BackgroundTransparency = 1
+    AttemptsLabel.Text = "Attempts remaining: 3"
+    AttemptsLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    AttemptsLabel.TextSize = 13
+    AttemptsLabel.Font = Enum.Font.GothamBold
+    AttemptsLabel.Parent = Main
+
+    local InputFrame = Instance.new("Frame")
+    InputFrame.Size = UDim2.new(0.85, 0, 0, 40)
+    InputFrame.Position = UDim2.new(0.075, 0, 0, 82)
+    InputFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    InputFrame.BorderSizePixel = 0
+    InputFrame.Parent = Main
+
+    Instance.new("UICorner", InputFrame).CornerRadius = UDim.new(0, 10)
+
+    local InputBox = Instance.new("TextBox")
+    InputBox.Name = "KeyInput"
+    InputBox.Size = UDim2.new(1, -20, 1, 0)
+    InputBox.Position = UDim2.new(0, 10, 0, 0)
+    InputBox.BackgroundTransparency = 1
+    InputBox.Text = ""
+    InputBox.PlaceholderText = "Enter key..."
+    InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    InputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 110)
+    InputBox.TextSize = 14
+    InputBox.Font = Enum.Font.GothamBold
+    InputBox.TextXAlignment = Enum.TextXAlignment.Center
+    InputBox.ClearTextOnFocus = false
+    InputBox.Parent = InputFrame
+
+    local StatusMsg = Instance.new("TextLabel")
+    StatusMsg.Name = "StatusMsg"
+    StatusMsg.Size = UDim2.new(0.9, 0, 0, 18)
+    StatusMsg.Position = UDim2.new(0.05, 0, 0, 128)
+    StatusMsg.BackgroundTransparency = 1
+    StatusMsg.Text = ""
+    StatusMsg.TextColor3 = Color3.fromRGB(255, 80, 80)
+    StatusMsg.TextSize = 12
+    StatusMsg.Font = Enum.Font.GothamBold
+    StatusMsg.Parent = Main
+
+    local SubmitBtn = Instance.new("TextButton")
+    SubmitBtn.Size = UDim2.new(0.85, 0, 0, 38)
+    SubmitBtn.Position = UDim2.new(0.075, 0, 0, 152)
+    SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    SubmitBtn.Text = "VERIFY"
+    SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SubmitBtn.TextSize = 14
+    SubmitBtn.Font = Enum.Font.GothamBold
+    SubmitBtn.Parent = Main
+
+    Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 10)
+
+    local CloseBtn = Instance.new("TextButton")
+    CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+    CloseBtn.Position = UDim2.new(1, -32, 0, 4)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    CloseBtn.Text = "X"
+    CloseBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    CloseBtn.TextSize = 14
+    CloseBtn.Font = Enum.Font.GothamBold
+    CloseBtn.Parent = Main
+
+    Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
+
+    -- Drag System
+    local dragging, dragStart, startPos
+    Main.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = Main.Position
+        end
+    end)
+    Main.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+            local delta = input.Position - dragStart
+            Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    Main.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    -- Key Logic
+    local correctKey = "fast1"
+    local attempts = 3
+
+    local function shakeFrame()
+        local originalPos = Main.Position
+        for i = 1, 6 do
+            local offset = math.random(-8, 8)
+            Main.Position = UDim2.new(originalPos.X.Scale, originalPos.X.Offset + offset, originalPos.Y.Scale, originalPos.Y.Offset)
+            wait(0.03)
+        end
+        Main.Position = originalPos
+    end
+
+    local function verifyKey()
+        local enteredKey = InputBox.Text
+
+        if enteredKey == correctKey then
+            StatusMsg.Text = "Correct key! Loading..."
+            StatusMsg.TextColor3 = Color3.fromRGB(100, 255, 100)
+            SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+            SubmitBtn.Text = "ACCESS GRANTED"
+
+            TweenService:Create(Glow, TweenInfo.new(0.5), {BackgroundColor3 = Color3.fromRGB(0, 255, 100)}):Play()
+            TweenService:Create(Main, TweenInfo.new(0.5), {BackgroundColor3 = Color3.fromRGB(15, 30, 20)}):Play()
+
+            wait(1.2)
+
+            TweenService:Create(Blur, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+            TweenService:Create(Main, TweenInfo.new(0.5), {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+
+            wait(0.5)
+            ScreenGui:Destroy()
+
+            loadMainScript()
+        else
+            attempts = attempts - 1
+            AttemptsLabel.Text = "Attempts remaining: " .. attempts
+
+            if attempts <= 0 then
+                AttemptsLabel.Text = "Attempts remaining: 0"
+                AttemptsLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+                StatusMsg.Text = "Too many attempts! Disconnecting..."
+                StatusMsg.TextColor3 = Color3.fromRGB(255, 50, 50)
+                SubmitBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+                SubmitBtn.Text = "ACCESS DENIED"
+                SubmitBtn.Active = false
+
+                wait(2)
+                player:Kick("Key System | Too many incorrect attempts (3/3). Rejoin with the correct key.")
+            else
+                StatusMsg.Text = "Incorrect key! (" .. attempts .. " attempt" .. (attempts > 1 and "s" or "") .. " remaining)"
+                StatusMsg.TextColor3 = Color3.fromRGB(255, 80, 80)
+                shakeFrame()
+                InputBox.Text = ""
+                InputBox:CaptureFocus()
+            end
+        end
+    end
+
+    SubmitBtn.MouseButton1Click:Connect(verifyKey)
+    InputBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            verifyKey()
+        end
+    end)
+
+    CloseBtn.MouseButton1Click:Connect(function()
+        player:Kick("Key System | Unauthorized closure.")
+    end)
+
+    Main.Size = UDim2.new(0, 0, 0, 0)
+    Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+    TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 320, 0, 220), Position = UDim2.new(0.5, -160, 0.5, -110)}):Play()
+end
+
+-- ========== MAIN FASTHUB FARM SCRIPT ==========
+function loadMainScript()
+    local player = Players.LocalPlayer
+    local playerGui = player:WaitForChild("PlayerGui")
+
+    if playerGui:FindFirstChild("RensselaerFarm") then
+        playerGui.RensselaerFarm:Destroy()
+    end
+
+    -- ========== GUI ==========
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "RensselaerFarm"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = playerGui
+
+    local Main = Instance.new("Frame")
+    Main.Size = UDim2.new(0, 220, 0, 160)
+    Main.Position = UDim2.new(0.5, -110, 0.12, 0)
+    Main.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    Main.BorderSizePixel = 0
+    Main.Parent = ScreenGui
+
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 26)
+    Title.BackgroundTransparency = 1
+    Title.Text = "FASTHUB Farm"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 13
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = Main
+
+    local CloseBtn = Instance.new("TextButton")
+    CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+    CloseBtn.Position = UDim2.new(1, -28, 0, 2)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    CloseBtn.Text = "X"
+    CloseBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    CloseBtn.TextSize = 14
+    CloseBtn.Font = Enum.Font.GothamBold
+    CloseBtn.Parent = Main
+
+    Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Name = "ToggleBtn"
+    ToggleBtn.Size = UDim2.new(0.85, 0, 0, 34)
+    ToggleBtn.Position = UDim2.new(0.075, 0, 0.22, 0)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 140, 0)
+    ToggleBtn.Text = "GET IN CAR"
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleBtn.TextSize = 12
+    ToggleBtn.Font = Enum.Font.GothamBold
+    ToggleBtn.Parent = Main
+
+    Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 8)
+
+    local Status = Instance.new("TextLabel")
+    Status.Size = UDim2.new(0.9, 0, 0, 16)
+    Status.Position = UDim2.new(0.05, 0, 0.46, 0)
+    Status.BackgroundTransparency = 1
+    Status.Text = "Idle"
+    Status.TextColor3 = Color3.fromRGB(180, 180, 180)
+    Status.TextSize = 11
+    Status.Font = Enum.Font.Gotham
+    Status.Parent = Main
+
+    local MoneyFrame = Instance.new("Frame")
+    MoneyFrame.Size = UDim2.new(0.9, 0, 0, 28)
+    MoneyFrame.Position = UDim2.new(0.05, 0, 0.56, 0)
+    MoneyFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    MoneyFrame.BorderSizePixel = 0
+    MoneyFrame.Parent = Main
+
+    Instance.new("UICorner", MoneyFrame).CornerRadius = UDim.new(0, 6)
+
+    local MoneyLabel = Instance.new("TextLabel")
+    MoneyLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    MoneyLabel.Position = UDim2.new(0, 8, 0, 0)
+    MoneyLabel.BackgroundTransparency = 1
+    MoneyLabel.Text = "$0"
+    MoneyLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
+    MoneyLabel.TextSize = 13
+    MoneyLabel.Font = Enum.Font.GothamBold
+    MoneyLabel.TextXAlignment = Enum.TextXAlignment.Left
+    MoneyLabel.Parent = MoneyFrame
+
+    local MoneyGained = Instance.new("TextLabel")
+    MoneyGained.Size = UDim2.new(0.4, 0, 1, 0)
+    MoneyGained.Position = UDim2.new(0.6, 0, 0, 0)
+    MoneyGained.BackgroundTransparency = 1
+    MoneyGained.Text = "+$0"
+    MoneyGained.TextColor3 = Color3.fromRGB(255, 200, 50)
+    MoneyGained.TextSize = 12
+    MoneyGained.Font = Enum.Font.Gotham
+    MoneyGained.TextXAlignment = Enum.TextXAlignment.Right
+    MoneyGained.Parent = MoneyFrame
+
+    local Counter = Instance.new("TextLabel")
+    Counter.Size = UDim2.new(0.9, 0, 0, 18)
+    Counter.Position = UDim2.new(0.05, 0, 0.82, 0)
+    Counter.BackgroundTransparency = 1
+    Counter.Text = "Fix: 0  |  Fuel: 0"
+    Counter.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Counter.TextSize = 11
+    Counter.Font = Enum.Font.GothamBold
+    Counter.Parent = Main
+
+    -- Drag
+    local dragging, dragStart, startPos
+    Main.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = Main.Position
+        end
+    end)
+    Main.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+            local delta = input.Position - dragStart
+            Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    Main.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    -- ========== LOGIC ==========
+    local farming = false
+    local farmConnection = nil
+    local autoThread = nil
+    local fixCount = 0
+    local fuelCount = 0
+    local startMoney = 0
+    local currentMoney = 0
+    local moneyGained = 0
+    local moneyValue = nil
+    local vehicleCheckConnection = nil
+
+    -- ========== Format number with commas ==========
+    local function formatNumber(num)
+        if not num then return "0" end
+        num = math.floor(num)
+        local formatted = tostring(num)
+        local k = 1
+        while k < #formatted do
+            if (#formatted - k) % 3 == 0 and k ~= #formatted then
+                formatted = formatted:sub(1, k) .. "," .. formatted:sub(k + 1)
+                k = k + 2
+            else
+                k = k + 1
+            end
+        end
+        return formatted
+    end
+
+    -- ========== VEHICLE CHECK ==========
+    local function isInVehicle()
+        local char = player.Character
+        if not char then return false end
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return false end
+        local seat = humanoid.SeatPart
+        if not seat then return false end
+        return true
+    end
+
+    local function getCarBody()
+        local char = player.Character
+        if not char then return nil end
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return nil end
+        local seat = humanoid.SeatPart
+        if not seat then return nil end
+        
+        local car = seat:FindFirstAncestorOfClass("Model")
+        if not car then return nil end
+        
+        local body = car:FindFirstChild("Body")
+        if body and body:IsA("BasePart") then return body end
+        
+        local chassis = car:FindFirstChild("Chassis")
+        if chassis and chassis:IsA("BasePart") then return chassis end
+        
+        for _, v in ipairs(car:GetDescendants()) do
+            if v:IsA("BasePart") and v.Name ~= "Seat" then return v end
+        end
+        return nil
+    end
+
+    local function updateToggleButton()
+        if farming then
+            ToggleBtn.Text = "STOP"
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
+        else
+            if isInVehicle() then
+                ToggleBtn.Text = "START"
+                ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 140, 0)
+            else
+                ToggleBtn.Text = "GET IN CAR"
+                ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 140, 0)
+            end
+        end
+    end
+
+    -- ========== MONEY TRACKER ==========
+    local function setupMoneyTracker()
+        local leaderstats = player:FindFirstChild("leaderstats")
+        if not leaderstats then
+            local stats = player:WaitForChild("leaderstats", 5)
+            if stats then leaderstats = stats end
+        end
+        
+        if leaderstats then
+            moneyValue = leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash")
+            if moneyValue then
+                moneyValue.Changed:Connect(function(newVal)
+                    if farming and newVal > currentMoney then
+                        local diff = newVal - currentMoney
+                        moneyGained = moneyGained + diff
+                        MoneyGained.Text = "+$" .. formatNumber(moneyGained)
+                        currentMoney = newVal
+                        MoneyLabel.Text = "$" .. formatNumber(currentMoney)
+                    end
+                end)
+                return moneyValue.Value
+            end
+        end
+        return 0
+    end
+
+    local function getPlayerMoney()
+        if moneyValue then
+            return moneyValue.Value
+        end
+        return setupMoneyTracker()
+    end
+
+    local function doFix()
+        pcall(function()
+            ReplicatedStorage:WaitForChild("FixVehicle"):InvokeServer()
+        end)
+        fixCount += 1
+        Counter.Text = "Fix: " .. fixCount .. "  |  Fuel: " .. fuelCount
+    end
+
+    local function doRefuel()
+        pcall(function()
+            local args = {100, "supreme"}
+            ReplicatedStorage:WaitForChild("Refuel"):InvokeServer(unpack(args))
+        end)
+        fuelCount += 1
+        Counter.Text = "Fix: " .. fixCount .. "  |  Fuel: " .. fuelCount
+    end
+
+    local function startFarm()
+        if not isInVehicle() then
+            Status.Text = "Not in vehicle!"
+            Status.TextColor3 = Color3.fromRGB(255, 100, 100)
+            return
+        end
+
+        farming = true
+        fixCount = 0
+        fuelCount = 0
+        moneyGained = 0
+        Counter.Text = "Fix: 0  |  Fuel: 0"
+        MoneyGained.Text = "+$0"
+        
+        startMoney = setupMoneyTracker()
+        currentMoney = startMoney
+        MoneyLabel.Text = "$" .. formatNumber(currentMoney)
+        
+        Status.Text = "Farming..."
+        Status.TextColor3 = Color3.fromRGB(100, 255, 100)
+        updateToggleButton()
+        
+        local startPos = nil
+        local startCFrame = nil
+        
+        farmConnection = RunService.Heartbeat:Connect(function()
+            if not farming then return end
+            
+            if not isInVehicle() then
+                stopFarm()
+                Status.Text = "Left vehicle!"
+                Status.TextColor3 = Color3.fromRGB(255, 100, 100)
+                return
+            end
+            
+            local body = getCarBody()
+            if not body then return end
+            
+            if not startPos then
+                startPos = body.Position
+                startCFrame = body.CFrame
+            end
+            
+            body.Velocity = Vector3.new(50, 0, 0)
+            body.RotVelocity = Vector3.new(0, 0, 0)
+            body.CFrame = startCFrame
+        end)
+        
+        autoThread = task.spawn(function()
+            while farming do
+                doFix()
+                doRefuel()
+                for i = 30, 1, -1 do
+                    if not farming then break end
+                    Status.Text = "Next: " .. i .. "s"
+                    wait(1)
+                end
+            end
+        end)
+    end
+
+    local function stopFarm()
+        farming = false
+        if farmConnection then farmConnection:Disconnect() end
+        farmConnection = nil
+        autoThread = nil
+        
+        Status.Text = "Idle"
+        Status.TextColor3 = Color3.fromRGB(180, 180, 180)
+        updateToggleButton()
+    end
+
+    ToggleBtn.MouseButton1Click:Connect(function()
+        if farming then
+            stopFarm()
+        else
+            if isInVehicle() then
+                startFarm()
+            else
+                Status.Text = "Get in a car first!"
+                Status.TextColor3 = Color3.fromRGB(255, 150, 50)
+            end
+        end
+    end)
+
+    CloseBtn.MouseButton1Click:Connect(function()
+        stopFarm()
+        ScreenGui:Destroy()
+    end)
+
+    -- Vehicle detection loop
+    vehicleCheckConnection = RunService.Heartbeat:Connect(function()
+        if not farming then
+            updateToggleButton()
+        end
+    end)
+
+    -- ========== ANTI-AFK 100% ==========
+    player.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+
+    task.spawn(function()
+        while true do
+            wait(480)
+            if farming then
+                pcall(function()
+                    VirtualUser:CaptureController()
+                    VirtualUser:Button1Down(Vector2.new(math.random(50, 300), math.random(50, 300)))
+                    wait(0.2)
+                    VirtualUser:Button1Up(Vector2.new(math.random(50, 300), math.random(50, 300)))
+                end)
+            end
+        end
+    end)
+
+    task.spawn(function()
+        while true do
+            wait(720)
+            if farming then
+                pcall(function()
+                    local cam = workspace.CurrentCamera
+                    local cf = cam.CFrame
+                    cam.CFrame = cf * CFrame.new(0.01, 0, 0)
+                    wait(0.1)
+                    cam.CFrame = cf
+                end)
+            end
+        end
+    end)
+
+    RunService.Heartbeat:Connect(function()
+        if farming then
+            workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+        end
+    end)
+
+    task.spawn(function()
+        while true do
+            wait(900)
+            if farming then
+                pcall(function()
+                    VirtualUser:CaptureController()
+                    VirtualUser:MoveMouse(Vector2.new(math.random(-20, 20), math.random(-20, 20)))
+                    wait(0.5)
+                    VirtualUser:MoveMouse(Vector2.new(0, 0))
+                end)
+            end
+        end
+    end)
+
+    print("FASTHUB Farm loaded - Vehicle detection active!")
+    print("Sleep safe! Farm will run all night!")
+end
+
+-- ========== LAUNCH ==========
+createKeySystem()
